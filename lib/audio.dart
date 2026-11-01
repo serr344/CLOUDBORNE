@@ -4,7 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
 /// Background music: one track at a time, looping, with fades.
-/// Tracks are made by tools/audio/make_music.py (the intro uses theme_lullaby.wav).
+/// The intro uses theme_lullaby.wav.
 class Music {
   static final AudioPlayer _player = AudioPlayer();
   static Timer? _fade;
@@ -39,7 +39,7 @@ class Music {
 }
 
 /// Short sound effects. The text blip is the "voice" of typed dialogue: a soft wooden
-/// marimba "tok" in three slightly different pitches (tools/audio/make_text_voice.py).
+/// marimba "tok" in three slightly different pitches.
 ///
 /// Six preloaded players (two per pitch) are used round-robin, which works reliably in browsers.
 /// [init] is safe to call many times; call it from a user gesture so the browser allows audio.

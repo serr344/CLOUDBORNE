@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -27,15 +28,27 @@ Route<void> fadeRoute(Widget page) => PageRouteBuilder<void>(
       transitionsBuilder: (_, a, _, child) => FadeTransition(opacity: a, child: child),
     );
 
+enum TouchPhase { down, move, up }
+
 /// Everything is drawn on a virtual 16:9 screen ([width] pixels wide, 320 by default)
 /// and scaled up with hard edges.
 class PixelStage extends StatelessWidget {
-  const PixelStage({super.key, required this.painter, this.width = 320, this.onTap});
+  const PixelStage({
+    super.key,
+    required this.painter,
+    this.width = 320,
+    this.onTap,
+    this.onTouch,
+  });
   final CustomPainter painter;
   final double width;
 
   /// Called with the tap position in virtual screen pixels.
   final void Function(Offset virtual)? onTap;
+
+  /// Every finger separately (for two-thumb controls): pointer id, phase, position in virtual
+  /// pixels, and whether it is a mouse.
+  final void Function(int id, TouchPhase phase, Offset virtual, bool mouse)? onTouch;
 
   @override
   Widget build(BuildContext context) {
@@ -44,13 +57,28 @@ class PixelStage extends StatelessWidget {
         aspectRatio: 16 / 9,
         child: LayoutBuilder(builder: (context, box) {
           final k = box.maxWidth / width;
-          final paint = CustomPaint(size: box.biggest, painter: _Scaled(painter, k, width));
-          if (onTap == null) return paint;
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapUp: (d) => onTap!(d.localPosition / k),
-            child: paint,
-          );
+          Widget child = CustomPaint(size: box.biggest, painter: _Scaled(painter, k, width));
+          if (onTap != null) {
+            child = GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapUp: (d) => onTap!(d.localPosition / k),
+              child: child,
+            );
+          }
+          final touch = onTouch;
+          if (touch != null) {
+            void send(PointerEvent e, TouchPhase phase) =>
+                touch(e.pointer, phase, e.localPosition / k, e.kind == PointerDeviceKind.mouse);
+            child = Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (e) => send(e, TouchPhase.down),
+              onPointerMove: (e) => send(e, TouchPhase.move),
+              onPointerUp: (e) => send(e, TouchPhase.up),
+              onPointerCancel: (e) => send(e, TouchPhase.up),
+              child: child,
+            );
+          }
+          return child;
         }),
       ),
     );

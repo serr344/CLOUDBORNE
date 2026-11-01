@@ -14,35 +14,33 @@ flutter run -d chrome
 
 | Key | Action |
 |---|---|
-| Z / Space / Enter / tap | Advance text, confirm |
+| Z / Space / Enter / tap | Advance text, confirm, check things |
 | X / Esc | Skip the intro |
-| Arrows / swipe | Turn the letter rose on the name screen |
+| Arrows / swipe | Turn the letter rose on the name screen; walk in chapter 1 |
 | Space / tap | Take a letter |
 | Backspace | Erase a letter |
 | Enter | Finish the name |
+| B (title screen) | Battle prototype (development shortcut) |
 
 ## Flow
 
 Title -> intro (9 storybook panels with typed text, music and text voice) -> name screen ->
-chapter 1 placeholder.
+chapter 1 (wake up on a cloud, walk the corridor, go through the door).
 
 ## Layout
 
 ```
 lib/
   main.dart
-  game_state.dart        saved player name
+  game_state.dart        saved player name, enemies that fell
   audio.dart             music and the text voice
   ui/                    pixel font, virtual pixel screen, shared drawing helpers
-  screens/               title, intro, name, chapter placeholder
+  screens/               title, intro, name
+  world/                 chapter 1
+  battle/                battle prototype: arena, enemies, battle screen
 assets/
-  images/intro/          intro panels (generated)
-  audio/                 theme and text voice (generated)
-art_src/intro/           source pictures for the intro panels
-tools/
-  art/cut_intro.py       art_src/intro -> assets/images/intro (sharp 256x142 pixel art)
-  audio/make_music.py    synthesises theme_lullaby.wav
-  audio/make_text_voice.py  synthesises text_wood_0..2.wav
+  images/intro/          intro panels
+  images/chapter1/       chapter 1 map, walk mask, door, vine, the kid's walk frames
+  images/battle/         battle sprites
+  audio/                 theme and text voice
 ```
-
-The tools need Python 3; `cut_intro.py` also needs Pillow.

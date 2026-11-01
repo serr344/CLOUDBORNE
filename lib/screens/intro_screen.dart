@@ -31,7 +31,7 @@ class IntroPanel {
   final List<String> pages;
 }
 
-/// Panels are made from art_src/intro/ by tools/art/cut_intro.py (256x142 each, shown 1:1).
+/// Panels are 256x142 pixel art, shown 1:1.
 const introPanels = [
   IntroPanel('assets/images/intro/panel_01.png', [
     'LONG AGO, TWO PEOPLES SHARED THE WORLD.',
@@ -67,8 +67,10 @@ const introPanels = [
     'HIGHER THAN THE BIRDS. HIGHER THAN THE RAIN.',
   ]),
   IntroPanel('assets/images/intro/panel_09.png', [
-    'AND WHEN I REACHED THE CLOUDS...',
-    'THE VINE SNAPPED BEHIND ME.',
+    'BY THE TIME I REACHED THE CLOUDS, MY ARMS WERE SHAKING.',
+    'I CRAWLED ONTO THE CLOUD AND FELL ON MY HANDS. I COULD NOT TAKE ONE MORE STEP.',
+    'THEN, BEHIND ME... CRACK.',
+    'THE VINE SNAPPED.',
   ]),
 ];
 

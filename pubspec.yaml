@@ -19,4 +19,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/intro/
+    - assets/images/battle/
+    - assets/images/chapter1/
     - assets/audio/

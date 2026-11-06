@@ -20,7 +20,7 @@ flutter run -d chrome
 | Space / tap | Take a letter |
 | Backspace | Erase a letter |
 | Enter | Finish the name |
-| B (title screen) | Battle prototype (development shortcut) |
+| Esc (chapter 1, debug builds only) | Back to the title |
 
 ## Flow
 
@@ -32,15 +32,37 @@ chapter 1 (wake up on a cloud, walk the corridor, go through the door).
 ```
 lib/
   main.dart
-  game_state.dart        saved player name, enemies that fell
+  game_state.dart        saved player name
   audio.dart             music and the text voice
-  ui/                    pixel font, virtual pixel screen, shared drawing helpers
+  ui/                    pixel font (with text wrapping), virtual pixel screen, shared drawing helpers
   screens/               title, intro, name
   world/                 chapter 1
-  battle/                battle prototype: arena, enemies, battle screen
 assets/
   images/intro/          intro panels
-  images/chapter1/       chapter 1 map, walk mask, door, vine, the kid's walk frames
-  images/battle/         battle sprites
+  images/chapter1/       chapter 1 map, walk mask, door, the kid's walk frames
   audio/                 theme and text voice
+test/                    pixel font wrapping, saved state
 ```
+
+## Tests
+
+```bash
+flutter test
+```
+
+## Android release signing
+
+Release builds are signed with the key described in `android/key.properties` (ignored by git):
+
+```properties
+storeFile=/absolute/path/to/upload-keystore.jks
+storePassword=...
+keyAlias=upload
+keyPassword=...
+```
+
+Create the keystore once with
+`keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`
+and keep it safe; every update must be signed with the same key. Without `key.properties` a
+release build falls back to the debug key, which works on your own device but is rejected by
+Google Play.

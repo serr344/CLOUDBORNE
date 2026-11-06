@@ -94,7 +94,7 @@ class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStat
   static const _textX = 112.0, _textY = 172.0, _maxChars = 42;
   static const _charsPerSec = 20.0;
 
-  late final Ticker _ticker;
+  Ticker? _ticker;
   final ValueNotifier<int> _repaint = ValueNotifier(0);
   final List<ui.Image> _images = [];
   Duration _last = Duration.zero;
@@ -108,8 +108,9 @@ class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStat
   _Step _step = _Step.fadeIn;
   bool _left = false;
 
-  List<String> get _lines => _wrap(introPanels[_panel].pages[_page]);
-  int get _pageLen => _lines.fold(0, (s, l) => s + l.length);
+  String get _pageText => introPanels[_panel].pages[_page];
+  List<String> get _lines => PixelFont.wrap(_pageText, _maxChars);
+  int get _pageLen => _pageText.length;
 
   @override
   void initState() {
@@ -120,13 +121,13 @@ class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStat
       }
       if (!mounted) return;
       _ticker = createTicker(_tick)..start();
-      Music.play('audio/theme_lullaby.wav');
+      Music.play('audio/theme_lullaby.mp3');
     }();
   }
 
   @override
   void dispose() {
-    if (_images.length == introPanels.length) _ticker.dispose();
+    _ticker?.dispose();
     _repaint.dispose();
     super.dispose();
   }
@@ -142,7 +143,7 @@ class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStat
         if (_chars < _pageLen) {
           final before = _chars.floor();
           _chars += dt * _charsPerSec;
-          _blipFor(before, _chars.floor(), _lines.join());
+          _blipFor(before, _chars.floor(), _pageText);
         } else {
           _hold += dt;
           if (_hold > 2.4) _nextPage();
@@ -203,6 +204,7 @@ class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStat
   }
 
   void _skip() {
+    if (_step == _Step.card) return;
     _step = _Step.card;
     _endT = 0;
     _alpha = 0;
@@ -213,22 +215,6 @@ class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStat
     _left = true;
     Music.fadeOut();
     widget.onFinished();
-  }
-
-  static List<String> _wrap(String text) {
-    final lines = <String>[];
-    var cur = '';
-    for (final w in text.split(' ')) {
-      final next = cur.isEmpty ? w : '$cur $w';
-      if (next.length > _maxChars && cur.isNotEmpty) {
-        lines.add(cur);
-        cur = w;
-      } else {
-        cur = next;
-      }
-    }
-    if (cur.isNotEmpty) lines.add(cur);
-    return lines;
   }
 
   @override
@@ -281,14 +267,8 @@ class _IntroPainter extends CustomPainter {
     drawPanelBorder(c, _IntroScreenState._panelX, _IntroScreenState._panelY, img.width.toDouble(), img.height.toDouble(), a);
     if (s._step == _Step.text || s._step == _Step.fadeOut) {
       _ink.color = ink.withValues(alpha: s._step == _Step.fadeOut ? a : 1);
-      var left = s._chars;
-      var y = _IntroScreenState._textY;
-      for (final line in s._lines) {
-        if (left <= 0) break;
-        PixelFont.draw(c, line, _IntroScreenState._textX, y, _ink, progress: left);
-        left -= line.length;
-        y += 13;
-      }
+      PixelFont.drawLines(c, s._lines, _IntroScreenState._textX, _IntroScreenState._textY, _ink,
+          lineHeight: 13, progress: s._chars);
     }
   }
 

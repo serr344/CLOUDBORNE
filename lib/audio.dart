@@ -4,7 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
 /// Background music: one track at a time, looping, with fades.
-/// The intro uses theme_lullaby.wav.
+/// The intro uses theme_lullaby.mp3.
 class Music {
   static final AudioPlayer _player = AudioPlayer();
   static Timer? _fade;

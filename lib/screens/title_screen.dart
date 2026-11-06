@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../audio.dart';
-import '../battle/battle_screen.dart';
 import '../ui/pixel_font.dart';
 import '../ui/pixel_stage.dart';
 import '../world/chapter1_screen.dart';
@@ -30,18 +29,11 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
     final nav = Navigator.of(context);
     nav.pushReplacement(fadeRoute(IntroScreen(
       onFinished: () => nav.pushReplacement(fadeRoute(NameScreen(
-        onDone: (_) => _toChapter1(nav),
+        onDone: () => nav.pushReplacement(fadeRoute(Chapter1Screen(
+          onExit: () => nav.pushReplacement(fadeRoute(const TitleScreen())),
+        ))),
       ))),
     )));
-  }
-
-  static void _toChapter1(NavigatorState nav) =>
-      nav.pushReplacement(fadeRoute(Chapter1Screen(onExit: () => nav.pushReplacement(fadeRoute(const TitleScreen())))));
-
-  void _startBattle() {
-    Sfx.init();
-    final nav = Navigator.of(context);
-    nav.pushReplacement(fadeRoute(BattleScreen(onExit: () => nav.pushReplacement(fadeRoute(const TitleScreen())))));
   }
 
   @override
@@ -49,16 +41,9 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
     return Focus(
       autofocus: true,
       onKeyEvent: (_, e) {
-        if (e is KeyDownEvent) {
-          // B opens the battle prototype directly (development shortcut)
-          if (e.logicalKey == LogicalKeyboardKey.keyB) {
-            _startBattle();
-          } else {
-            _start();
-          }
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
+        if (e is! KeyDownEvent) return KeyEventResult.ignored;
+        _start();
+        return KeyEventResult.handled;
       },
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -87,9 +72,6 @@ class _TitlePainter extends CustomPainter {
       const hint = 'PRESS ANY KEY OR TAP';
       PixelFont.draw(c, hint, 160 - PixelFont.width(hint) / 2, 120, _ink);
     }
-    const dev = 'B: BATTLE PROTOTYPE';
-    _ink.color = ink.withValues(alpha: 0.3);
-    PixelFont.draw(c, dev, 160 - PixelFont.width(dev) / 2, 166, _ink);
   }
 
   @override

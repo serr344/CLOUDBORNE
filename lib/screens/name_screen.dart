@@ -37,7 +37,7 @@ enum _Phase { pick, confirm, leaving }
 /// Typing on a keyboard turns the rose to that letter and takes it.
 class NameScreen extends StatefulWidget {
   const NameScreen({super.key, required this.onDone});
-  final ValueChanged<String> onDone;
+  final VoidCallback onDone;
 
   @override
   State<NameScreen> createState() => _NameScreenState();
@@ -98,7 +98,7 @@ class _NameScreenState extends State<NameScreen> with SingleTickerProviderStateM
       _leaveT += dt;
       if (_leaveT > 3.0) {
         _ticker.stop();
-        widget.onDone(_name);
+        widget.onDone();
       }
     }
     _repaint.value++;

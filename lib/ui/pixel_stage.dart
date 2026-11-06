@@ -1,5 +1,4 @@
 import 'dart:ui' as ui;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -46,9 +45,8 @@ class PixelStage extends StatelessWidget {
   /// Called with the tap position in virtual screen pixels.
   final void Function(Offset virtual)? onTap;
 
-  /// Every finger separately (for two-thumb controls): pointer id, phase, position in virtual
-  /// pixels, and whether it is a mouse.
-  final void Function(int id, TouchPhase phase, Offset virtual, bool mouse)? onTouch;
+  /// Raw pointer down / move / up, with the position in virtual screen pixels.
+  final void Function(TouchPhase phase, Offset virtual)? onTouch;
 
   @override
   Widget build(BuildContext context) {
@@ -67,8 +65,7 @@ class PixelStage extends StatelessWidget {
           }
           final touch = onTouch;
           if (touch != null) {
-            void send(PointerEvent e, TouchPhase phase) =>
-                touch(e.pointer, phase, e.localPosition / k, e.kind == PointerDeviceKind.mouse);
+            void send(PointerEvent e, TouchPhase phase) => touch(phase, e.localPosition / k);
             child = Listener(
               behavior: HitTestBehavior.opaque,
               onPointerDown: (e) => send(e, TouchPhase.down),

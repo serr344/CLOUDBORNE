@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -30,8 +31,7 @@ enum _Dir { down, left, right, up }
 class _Chapter1State extends State<Chapter1Screen> with SingleTickerProviderStateMixin {
   final _repaint = ValueNotifier<int>(0);
   final Map<String, ui.Image> img = {};
-  late final Ticker _ticker;
-  ui.Image? _maskImage;
+  Ticker? _ticker;
   List<int> _walk = const [];
   int mapW = 0, mapH = 0;
   double _last = 0;
@@ -80,7 +80,7 @@ class _Chapter1State extends State<Chapter1Screen> with SingleTickerProviderStat
       for (final n in ['map', 'walk', 'door_open', 'kid_down', 'kid_left', 'kid_right', 'kid_up']) {
         img[n] = await loadAssetImage('$b/$n.png');
       }
-      final mask = _maskImage = img['walk']!;
+      final mask = img['walk']!;
       mapW = mask.width;
       mapH = mask.height;
       _walk = (await mask.toByteData(format: ui.ImageByteFormat.rawRgba))!.buffer.asUint8List();
@@ -91,7 +91,7 @@ class _Chapter1State extends State<Chapter1Screen> with SingleTickerProviderStat
 
   @override
   void dispose() {
-    if (_maskImage != null) _ticker.dispose();
+    _ticker?.dispose();
     _repaint.dispose();
     super.dispose();
   }
@@ -284,13 +284,13 @@ class _Chapter1State extends State<Chapter1Screen> with SingleTickerProviderStat
       _press();
     } else if (k == LogicalKeyboardKey.keyX && phase == _Phase.talk) {
       chars = currentLine.length.toDouble();
-    } else if (k == LogicalKeyboardKey.escape) {
-      widget.onExit();
+    } else if (k == LogicalKeyboardKey.escape && kDebugMode) {
+      widget.onExit(); // development shortcut back to the title
     }
     return KeyEventResult.handled;
   }
 
-  void _onTouch(int id, TouchPhase p, Offset at, bool mouse) {
+  void _onTouch(TouchPhase p, Offset at) {
     switch (p) {
       case TouchPhase.down:
         touchStart = at;
@@ -409,19 +409,14 @@ class _WorldPainter extends CustomPainter {
     final im = s.img[sheet]!;
     final fw = im.width / 4, fh = im.height.toDouble();
     final frame = s.moving ? (s.walkT * 6).floor() % 4 : 0;
-    // the frames keep the sheet's own resolution; draw them scaled down, smoothly, so they look
-    // exactly like the sheet
-    final w = fw / kidScale, h = fh / kidScale;
-    final dst = Rect.fromLTWH(s.kid.dx - w / 2, s.kid.dy - h + 1, w, h);
+    // drawn 1:1 but smoothed, because the camera follows his exact (not rounded) position
+    final dst = Rect.fromLTWH(s.kid.dx - fw / 2, s.kid.dy - fh + 1, fw, fh);
     final p = Paint()
       ..isAntiAlias = true
       ..filterQuality = FilterQuality.medium
       ..color = Color.fromRGBO(255, 255, 255, s.kidOpacity);
     c.drawImageRect(im, Rect.fromLTWH(frame * fw, 0, fw, fh), dst, p);
   }
-
-  /// Sheet pixels per screen pixel for the kid (the sheet's art pixels are about 7.5 wide).
-  static const kidScale = 7.5;
 
   void _box(Canvas c) {
     const r = Rect.fromLTWH(8, 128, 304, 46);
@@ -431,33 +426,11 @@ class _WorldPainter extends CustomPainter {
     _rect(c, Rect.fromLTWH(r.left, r.top, 1, r.height), ink);
     _rect(c, Rect.fromLTWH(r.right - 1, r.top, 1, r.height), ink);
 
-    final wrapped = _wrap(s.currentLine, 48);
-    var left = s.chars;
-    for (var i = 0; i < wrapped.length; i++) {
-      _text(c, wrapped[i], r.left + 8, r.top + 8 + i * 11, ink, progress: left);
-      left -= wrapped[i].length + 1;
-      if (left <= 0) break;
-    }
+    _p.color = ink;
+    PixelFont.drawLines(c, PixelFont.wrap(s.currentLine, 48), r.left + 8, r.top + 8, _p, progress: s.chars);
     if (s.chars >= s.currentLine.length && (s.t * 2).floor().isEven) {
       _rect(c, Rect.fromLTWH(r.right - 9, r.bottom - 7, 4, 3), ink);
     }
-  }
-
-  static List<String> _wrap(String text, int max) {
-    final out = <String>[];
-    var line = '';
-    for (final w in text.split(' ')) {
-      if (line.isEmpty) {
-        line = w;
-      } else if (line.length + 1 + w.length <= max) {
-        line += ' $w';
-      } else {
-        out.add(line);
-        line = w;
-      }
-    }
-    if (line.isNotEmpty) out.add(line);
-    return out;
   }
 
   @override

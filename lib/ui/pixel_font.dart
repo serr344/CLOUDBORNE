@@ -1,10 +1,11 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-/// Hand-drawn 5x7 pixel font (upper case only).
+/// Hand-drawn 5x7 pixel font: upper and lower case letters, digits and common punctuation.
+/// Unknown characters are drawn as '?'.
 ///
 /// Every glyph sits in a 9 row box: row 0 is empty headroom, rows 1-7 are the glyph and
-/// row 8 holds descenders (the comma's tail). Write text in UPPER CASE.
+/// row 8 holds descenders (the comma's tail, g, j, p, q, y).
 class PixelFont {
   static const int glyphW = 5;
   static const int advance = 6;
@@ -35,6 +36,35 @@ class PixelFont {
         final top = y + p.y * sy;
         c.drawRect(Rect.fromLTWH(gx + p.x * sx, math.min(top, top + sy), sx.abs(), sy.abs()), paint);
       }
+    }
+  }
+
+  /// Splits [text] into lines of at most [max] characters, breaking at spaces.
+  static List<String> wrap(String text, int max) {
+    final out = <String>[];
+    var line = '';
+    for (final w in text.split(' ')) {
+      if (line.isEmpty) {
+        line = w;
+      } else if (line.length + 1 + w.length <= max) {
+        line += ' $w';
+      } else {
+        out.add(line);
+        line = w;
+      }
+    }
+    if (line.isNotEmpty) out.add(line);
+    return out;
+  }
+
+  /// Draws wrapped [lines] being typed out. [progress] counts characters of the original text,
+  /// so the space where a line was broken counts as one character.
+  static void drawLines(Canvas c, List<String> lines, double x, double y, Paint paint,
+      {double lineHeight = 11, double progress = double.infinity}) {
+    var left = progress;
+    for (var i = 0; i < lines.length && left > 0; i++) {
+      draw(c, lines[i], x, y + i * lineHeight, paint, progress: left);
+      left -= lines[i].length + 1;
     }
   }
 
